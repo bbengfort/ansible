@@ -18,8 +18,59 @@
         </form>
 
         <h2>Action Log</h2>
-        <div id="log"></div>
+        <div id="log"><ul></ul></div>
       </div>
     </div>
   </div>
+{% endblock %}
+
+{% block javascript %}
+  {{ block.super }}
+  <script type="text/javascript">
+
+    var lastupdate = -1;
+
+    var getData = function() {
+      var url = 'http://127.0.0.1:1025?lastupdate='+lastupdate+'&callback';
+      $.ajax({
+        type: 'GET',
+        url: url,
+        dataType: 'jsonp',
+        async: true,
+        cache: false,
+        timeout: 10000,
+        success: function(response) {
+          $("#log ul").prepend($('<li>'+response.data+'</li>'));
+          lastupdate = response.timestamp;
+        },
+        complete: function() { getData(lastupdate); }
+      });
+    };
+
+    var postData = function(data) {
+      $.ajax({
+        type: 'POST',
+        url: 'http://127.0.0.1:1025',
+        data: {new_message: data},
+        async: true,
+        cache: false,
+        complete: function() { getData(lastupdate); }
+      });
+    };
+
+    $(document).ready(function() {
+      getData();
+
+      var frm  = $("form");
+      var inpt = $("#actionInput");
+      frm.bind("submit", function(e) {
+        e.preventDefault();
+        postData(inpt.val());
+        inpt.val("");
+        return false;
+      });
+
+    });
+
+  </script>
 {% endblock %}
