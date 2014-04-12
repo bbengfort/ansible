@@ -17,33 +17,23 @@ Sets up the application to run.
 ## Imports
 ##########################################################################
 
-from ansible.http import *
-from ansible.ingestor import *
-from twisted.web.resource import Resource
-from twisted.web.server import Site
-from twisted.internet import protocol
-from twisted.application import service, internet
+from ingestor import *
+from twisted.internet import reactor
 
 class App(object):
     """
     A class wrapper for the Ansible App
     """
 
+    Factory = IngestorFactory
+
+    def __init__(self, port=1025):
+        self.port    = port
+
     def run(self):
-        self.resource = HttpIngestor()
-        self.factory  = Site(self.resource)
-        self.root = self.resource()
-        self.root.putChild("", self.resource)
-        self.service = service.Application("ingestor")
+        reactor.listenTCP(self.port, self.Factory())
+        reactor.run()
 
-        internet.TCPServer(1025, Site(self.root)).setServiceParent(self.service)
-
-
-# Run via $ twistd -n -y app.py
-resource = HttpIngestor()
-factory  = Site(resource)
-root = Resource()
-root.putChild("", resource)
-application = service.Application("ingestor")
-
-internet.TCPServer(1025, Site(root)).setServiceParent(application)
+if __name__ == '__main__':
+    app = App()
+    app.run()

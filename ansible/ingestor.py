@@ -24,31 +24,58 @@ import time
 from twisted.protocols import basic
 from twisted.internet.protocol import Factory
 
+REGISTER = "REGISTER"
+CHAT     = "CHAT"
+
 class Ingestor(basic.LineReceiver):
+
+    def __init__(self, factory):
+        self.factory = factory
+        self.name    = None
+        self.state   = REGISTER
 
     def connectionMade(self):
         print "Got new client!"
-        self.transport.write('connected ...\n')
-        self.factory.clients.append(self)
+        self.sendLine("What's your name?")
 
     def connectionLost(self, reason):
         print "Lost a client!"
-        self.factory.clients.remove(self)
+        if self.name in self.factory.clients:
+            del self.factory.clients[self.name]
+            self.broadcast("%s has left the channel." % self.name)
 
-    def dataReceived(self, data):
-        print "received", repr(data)
-        self.factory.messages[float(time.time())] = data
-        self.updateClients(data)
+    def lineReceived(self, line):
+        print "recieved:", line
+        if self.state == REGISTER:
+            self.handle_registration(line)
+        elif self.state == CHAT:
+            self.handle_chat(line)
+        else:
+            raise Exception("Unknown State- '%s'!!!" % self.state)
 
-    def updateClients(self, data):
-        for client in self.factory.clients:
-            client.message(data)
+    def broadcast(self, message):
+        for name, protocol in self.factory.clients.iteritems():
+            if protocol != self:
+                protocol.sendLine(message)
 
-    def message(self, message):
-        self.transport.write("message" + "\n")
+    def handle_registration(self, name):
+        if name in self.factory.clients:
+            self.sendLine("Name taken, please choose another.")
+            return
+        self.sendLine("Welcome, %s!" % name)
+        self.broadcast("%s has joined the channel." % name)
+        self.name = name
+        self.factory.clients[name] = self
+        self.state = CHAT
+
+    def handle_chat(self, message):
+        message = "<%s> %s" % (self.name, message)
+        self.broadcast(message)
 
 class IngestorFactory(Factory):
 
-    protocol = Ingestor
-    clients  = []
-    messages = {}
+    def __init__(self):
+        self.clients = {}
+
+    def buildProtocol(self, addr):
+        return Ingestor(self)
