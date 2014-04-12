@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block body %}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        <div class="page-header">
+          <h1>{{ action }}</h1>
+        </div>
+
+        <form role="form">
+          <div class="input-group">
+            <input type="text" class="form-control" id="actionInput" placeholder="Enter Action">
+            <span class="input-group-btn">
+              <button class="btn btn-default" type="submit">Enter</button>
+            </span>
+          </div>
+        </form>
+
+        <h2>Action Log</h2>
+        <div id="log"></div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

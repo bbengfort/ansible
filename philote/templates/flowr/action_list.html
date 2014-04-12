@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block body %}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        <div class="page-header">
+          <h1>Actions Log</h1>
+        </div>
+
+        <ul class="list-unstyled">
+        {% for action in action_list %}
+          <li><a href="{% url 'action-detail' action.id %}">{{ action }}</a></li>
+        {% empty %}
+          <li>No actions have been registered yet!</li>
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}
