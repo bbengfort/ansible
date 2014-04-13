@@ -17,4 +17,4 @@ A Twisted Server for Data Ingestion
 ## Imports
 ##########################################################################
 
-from app import App
+from app import *

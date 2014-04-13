@@ -18,7 +18,14 @@ Sets up the application to run.
 ##########################################################################
 
 from ingestor import *
+from generate import *
 from twisted.internet import reactor
+
+##########################################################################
+## Runables
+##########################################################################
+
+DPORT = 1025    # Default Port
 
 class App(object):
     """
@@ -27,12 +34,34 @@ class App(object):
 
     Factory = IngestorFactory
 
-    def __init__(self, port=1025):
+    def __init__(self, port=DPORT):
         self.port    = port
 
     def run(self):
         reactor.listenTCP(self.port, self.Factory())
         reactor.run()
+
+class Connection(object):
+    """
+    A client connector to the app.
+    """
+
+    Factory = None
+
+    def __init__(self, host, port=DPORT):
+        self.host = host
+        self.port = port
+
+    def run(self):
+        reactor.connectTCP(self.host, self.port, self.Factory())
+        reactor.run()
+
+class Generator(Connection):
+    """
+    A class wrapper for the Sensor simulator
+    """
+
+    Factory = GeneratorFactory
 
 if __name__ == '__main__':
     app = App()

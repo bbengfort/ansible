@@ -22,6 +22,7 @@ import random
 import string
 
 from ingestor import get_timestamp
+from twisted.protocols import basic
 from twisted.internet import reactor, protocol
 from twisted.internet.task import deferLater
 from twisted.internet.protocol import ClientFactory
@@ -31,15 +32,13 @@ from twisted.internet.error import ReactorNotRunning
 ## Generator Protocol
 ##########################################################################
 
-NL = "\r\n"
-
 def random_action():
     a = random.choice(string.ascii_uppercase)
     b = random.choice('AEIOU')
     c = random.choice(string.ascii_uppercase)
     return a+b+c
 
-class GeneratorClient(protocol.Protocol):
+class GeneratorClient(basic.LineReceiver):
 
     def __init__(self, action=None, **kwargs):
         self.action = action or random_action()
@@ -49,11 +48,10 @@ class GeneratorClient(protocol.Protocol):
         print "[%s] connection made" % get_timestamp()
         self.generate()
 
-    def sendLine(self, line):
-        print "[%s] sending: \"%s\"" % (get_timestamp(), line)
-        self.transport.write(line + NL)
-
     def dataReceived(self, data):
+        """
+        Don't do anything when data is received
+        """
         pass
 
     def defer(self):
@@ -74,7 +72,9 @@ class GeneratorClient(protocol.Protocol):
         self.defer()
 
     def send_action(self):
-        self.sendLine("%s %0.3f" % (self.action, self.value))
+        line = "%s %0.3f" % (self.action, self.value)
+        print "[%s] sending: \"%s\"" % (get_timestamp(), line)
+        self.sendLine(line)
 
 class GeneratorFactory(ClientFactory):
 
