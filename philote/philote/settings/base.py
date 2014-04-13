@@ -54,7 +54,7 @@ ANSIBLE_DIR = os.path.normpath(os.path.join(PROJECT_DIR, os.pardir))
 ## Secret settings - do not store!
 ##########################################################################
 
-SECRET_KEY = environ_setting("SECRET_KEY")
+SECRET_KEY = environ_setting("SECRET_KEY", "")
 
 ##########################################################################
 ## Database Settings

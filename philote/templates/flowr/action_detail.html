@@ -105,6 +105,7 @@
                       // set up the updating of the chart each second
                       var chart = this;
                       var series = this.series;
+                      var shift = false;
                       setInterval(function() {
                           $.get(endpoint, function(data) {
 
@@ -137,17 +138,16 @@
                               $.each(obj, function(idx, obj) {
                                 obj.id = key + parseInt(obj.x).toString();
                                 obj.x  = new Date(obj.x*1000);
+                                shift = curSeries.data.length > 10;
                                 if (!chart.get(obj.id)) {
-                                  shift = curSeries.data.length > 20;
-                                  curSeries.addPoint(obj, true, shift);
+                                  curSeries.addPoint(obj, false, shift);
                                 }
                               });
 
                             });
 
                           });
-                          //chart.redraw();
-                          //series.addPoint([x, y], true, true);
+                          chart.redraw();
                       }, 1000);
                   }
               }
