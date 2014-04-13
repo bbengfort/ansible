@@ -18,3 +18,4 @@ A Twisted Server for Data Ingestion
 ##########################################################################
 
 from app import *
+from client import connect

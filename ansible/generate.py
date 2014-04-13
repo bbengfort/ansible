@@ -61,7 +61,7 @@ class GeneratorClient(basic.LineReceiver):
         return defer
 
     def onerror(self, failure):
-        failure.trap(Exception)
+        failure.trap(KeyboardInterrupt)
         self.loseConnection()
 
     def generate(self, increment=None):
