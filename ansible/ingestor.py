@@ -19,63 +19,60 @@ Right now, just implementing websockets using Twisted...
 ## Imports
 ##########################################################################
 
-import time
+import json
 
+from datetime import datetime
+from collections import defaultdict
 from twisted.protocols import basic
 from twisted.internet.protocol import Factory
 
-REGISTER = "REGISTER"
-CHAT     = "CHAT"
+HISTORY = 10
+
+def get_timestamp(fmt="%Y-%m-%d %H:%M:%S"):
+    return datetime.now().strftime(fmt)
+
+def parse_action(line):
+    action, value = line.split()
+    return action.upper(), float(value)
 
 class Ingestor(basic.LineReceiver):
 
     def __init__(self, factory):
         self.factory = factory
-        self.name    = None
-        self.state   = REGISTER
 
     def connectionMade(self):
-        print "Got new client!"
-        self.sendLine("What's your name?")
+        print "[%s] client connected" % get_timestamp()
+        self.factory.clients.append(self)
+        self.sendLine(self.json_state())
 
     def connectionLost(self, reason):
-        print "Lost a client!"
-        if self.name in self.factory.clients:
-            del self.factory.clients[self.name]
-            self.broadcast("%s has left the channel." % self.name)
+        print "[%s] client disconnected" % get_timestamp()
+        if self in self.factory.clients:
+            self.factory.clients.remove(self)
 
     def lineReceived(self, line):
-        print "recieved:", line
-        if self.state == REGISTER:
-            self.handle_registration(line)
-        elif self.state == CHAT:
-            self.handle_chat(line)
-        else:
-            raise Exception("Unknown State- '%s'!!!" % self.state)
+        print "[%s] recieved: \"%s\"" % (get_timestamp(), line)
+        action, value = parse_action(line)
+        self.factory.actions[action].append(value)
+        if len(self.factory.actions[action]) > HISTORY:
+            self.factory.actions[action] = self.factory.actions[action][-1 * HISTORY:]
+        self.broadcast()
 
-    def broadcast(self, message):
-        for name, protocol in self.factory.clients.iteritems():
+    def broadcast(self, message=None):
+        message = message or self.json_state()
+        for protocol in self.factory.clients:
             if protocol != self:
                 protocol.sendLine(message)
 
-    def handle_registration(self, name):
-        if name in self.factory.clients:
-            self.sendLine("Name taken, please choose another.")
-            return
-        self.sendLine("Welcome, %s!" % name)
-        self.broadcast("%s has joined the channel." % name)
-        self.name = name
-        self.factory.clients[name] = self
-        self.state = CHAT
-
-    def handle_chat(self, message):
-        message = "<%s> %s" % (self.name, message)
-        self.broadcast(message)
+    def json_state(self):
+        return json.dumps(self.factory.actions)
 
 class IngestorFactory(Factory):
 
     def __init__(self):
-        self.clients = {}
+        self.clients = []
+        self.actions = defaultdict(list)
 
     def buildProtocol(self, addr):
         return Ingestor(self)
+
