@@ -27,4 +27,5 @@ from django.conf.urls import patterns, url
 urlpatterns = patterns('',
     url(r'^$', ActionsList.as_view(), name='action-index'),
     url(r'^(?P<pk>\d+)/$', ActionDetail.as_view(), name='action-detail'),
+    url(r'^api/$', AnsibleView.as_view(), name='action-api'),
 )

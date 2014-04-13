@@ -148,3 +148,11 @@ EMAIL_HOST      = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'server@bengfort.com'
 EMAIL_HOST_PASSWORD = environ_setting("EMAIL_HOST_PASSWORD", "")
 EMAIL_PORT      = 587
+
+##########################################################################
+## Ansible Settings
+##########################################################################
+
+ANSIBLE_HOST = 'localhost'
+ANSIBLE_PORT = 1025
+ANSIBLE_TIMEOUT = 10

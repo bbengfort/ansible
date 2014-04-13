@@ -20,6 +20,7 @@ Right now, just implementing websockets using Twisted...
 ##########################################################################
 
 import json
+import time
 
 from datetime import datetime
 from collections import defaultdict
@@ -53,7 +54,7 @@ class Ingestor(basic.LineReceiver):
     def lineReceived(self, line):
         print "[%s] recieved: \"%s\"" % (get_timestamp(), line)
         action, value = parse_action(line)
-        self.factory.actions[action].append(value)
+        self.factory.actions[action].append({'x': time.time(), 'y': value})
         if len(self.factory.actions[action]) > HISTORY:
             self.factory.actions[action] = self.factory.actions[action][-1 * HISTORY:]
         self.broadcast()
